@@ -33,7 +33,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.version }}" ]; then
             echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
           else
-            VERSION=$(grep -E '^VERSION\s*=\s*"' TelegramTextApp/handler.py | cut -d '"' -f2)
+            VERSION=$(grep -E '^VERSION\s*=\s*"' FlaskAPIServer/server.py | cut -d '"' -f2)
             echo "version=$VERSION" >> $GITHUB_OUTPUT
           fi
       - name: Валидация версии

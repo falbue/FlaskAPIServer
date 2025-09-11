@@ -31,8 +31,6 @@ def setup(DEBUG=True, name="", log_path=""):
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
         
-        logger.info(f"Логирование настроено. Файл: {log_file}")
-        
     else:
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(formatter)

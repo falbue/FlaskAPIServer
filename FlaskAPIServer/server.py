@@ -11,7 +11,7 @@ from .config import *
 
 config = FlaskAPIServer.config
 
-logger = logger.setup()
+logger = logger.setup(DEBUG=config.DEBUG, name="SERVER", log_path=config.LOG_PATH)
 
 for var in config.required_env_vars:
     if not os.getenv(var):

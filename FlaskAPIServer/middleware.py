@@ -7,7 +7,7 @@ import FlaskAPIServer.utils.logger
 from dotenv import load_dotenv
 
 load_dotenv()
-logger =  FlaskAPIServer.utils.logger.setup(os.getenv("DEBUG"), name="middleware", log_path=os.getenv("LOG_PATH"))
+logger =  FlaskAPIServer.utils.logger.setup(os.getenv("DEBUG"), name="MIDDLEWARE", log_path=os.getenv("LOG_PATH"))
 
 _api_keys_cache = {}
 _cache_last_updated = 0

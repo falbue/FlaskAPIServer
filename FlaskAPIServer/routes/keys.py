@@ -1,7 +1,7 @@
-from routes import *
-import logger
+from . import *
 
-logger = logger.setup(name="KEYS")
+
+logger = logger.setup(DEBUG, name="API_KEYS", log_path=LOG_PATH)
 
 @api.route('/admin/keys', methods=['GET'])
 @key_role('developer')

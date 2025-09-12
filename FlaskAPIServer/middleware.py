@@ -2,12 +2,12 @@ from functools import wraps
 import os
 import time
 from flask import request, jsonify, g, current_app
-from FlaskAPIServer.utils.database import SQL_request
-import FlaskAPIServer.utils.logger
-from dotenv import load_dotenv
 
-load_dotenv()
-logger =  FlaskAPIServer.utils.logger.setup(os.getenv("DEBUG"), name="MIDDLEWARE", log_path=os.getenv("LOG_PATH"))
+from .utils.database import SQL_request
+from .utils import logger
+from . import config
+
+logger = logger.setup(config.DEBUG, name="MIDDLEWARE", log_path=config.LOG_PATH)
 
 _api_keys_cache = {}
 _cache_last_updated = 0

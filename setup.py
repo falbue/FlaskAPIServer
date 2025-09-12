@@ -10,7 +10,22 @@ def get_version_from_file(file_path: str, version_var: str = "VERSION"):
         return match.group(1) or match.group(2)
     return None
 
+def read_requirements(file_path: str = "requirements.txt"):
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            requirements = []
+            for line in f:
+                line = line.strip()
+                # Пропускаем пустые строки и комментарии
+                if line and not line.startswith("#"):
+                    requirements.append(line)
+            return requirements
+    except FileNotFoundError:
+        print(f"Warning: {file_path} not found. No dependencies will be installed.")
+        return []
+
 version = get_version_from_file("FlaskAPIServer/server.py")
+install_requires = read_requirements()
 
 setup(
     name='FlaskAPIServer',
@@ -20,7 +35,7 @@ setup(
     package_data={
         "developer_application": ["*"],
     },
-    # install_requires=[],
+    install_requires=install_requires,
     description='Готовый сервер flask для быстрого использования API',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',

@@ -4,7 +4,7 @@ from . import *
 logger = logger.setup(DEBUG, name="API_KEYS", log_path=LOG_PATH)
 
 @api.route('/admin/keys', methods=['GET'])
-@key_role('developer')
+@key_role('api_key')
 def get_all_keys():
     try:
         keys = SQL_request(
@@ -17,7 +17,7 @@ def get_all_keys():
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
 @api.route('/admin/keys', methods=['POST'])
-@key_role('developer')
+@key_role('api_key')
 def create_key():
     try:
         data = request.get_json()
@@ -42,7 +42,7 @@ def create_key():
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
 @api.route('/admin/keys/<key>', methods=['PUT'])
-@key_role('developer')
+@key_role('api_key')
 def update_key(key):
     try:
         data = request.get_json()
@@ -68,7 +68,7 @@ def update_key(key):
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
 @api.route('/admin/keys/<key>', methods=['DELETE'])
-@key_role('developer')
+@key_role('api_key')
 def delete_key(key):
     try:
         SQL_request(
@@ -87,7 +87,7 @@ def delete_key(key):
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
 @api.route('/admin/keys/refresh', methods=['GET'])
-@key_role('developer')
+@key_role('api_key')
 def refresh_keys():
     try:
         refresh_api_keys()

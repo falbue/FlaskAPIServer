@@ -61,3 +61,5 @@ SQL_request("""CREATE TABLE IF NOT EXISTS roles (
     name VARCHAR(50) PRIMARY KEY,
     priority INTEGER NOT NULL UNIQUE
 );""")
+
+SQL_request("INSERT OR IGNORE INTO roles (name, priority) VALUES ('api_key', 50);")

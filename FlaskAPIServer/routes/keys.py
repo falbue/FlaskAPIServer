@@ -41,7 +41,7 @@ def create_key():
         logger.error(f"Ошибка при создании ключа: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
-@api.route('/admin/keys/<key>', methods=['PUT'])
+@api.route('/admin/keys/<key>', methods=['PATCH'])
 @key_role('api_key')
 def update_key(key):
     try:

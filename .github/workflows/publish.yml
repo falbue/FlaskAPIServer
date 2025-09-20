@@ -71,6 +71,8 @@ jobs:
 
   create-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     needs: validate-tag
     if: ${{ needs.validate-tag.outputs.should-create-release == 'true' }}
     steps:

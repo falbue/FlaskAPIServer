@@ -86,15 +86,15 @@ def _check_role_access(user_priority, required_priority, check_mode):
         return user_priority >= required_priority
     return False
 
+
 def key_role(required_role=None, check_mode='min'):
     """
-    Декоратор для проверки ролей с поддержкой иерархии
+    Декоратор для проверки ролей с поддержкой иерархии или приоритета
     
-    :param required_role: Требуемая роль (строка или список строк)
+    :param required_role: Требуемая роль (строка) или приоритет (число)
     :param check_mode: Режим проверки:
-        - 'min': минимальная требуемая роль (по умолчанию)
-        - 'exact': точное совпадение роли
-        - 'any': любая из перечисленных ролей
+        - 'min': минимальная требуемая роль или приоритет (по умолчанию)
+        - 'exact': точное совпадение
     """
     def decorator(f):
         @wraps(f)
@@ -103,6 +103,7 @@ def key_role(required_role=None, check_mode='min'):
             
             if not api_key:
                 return jsonify({"error": "API ключ отсутствует"}), 401
+
             key_info = _get_api_key_info(api_key)
             
             if not key_info:
@@ -110,26 +111,25 @@ def key_role(required_role=None, check_mode='min'):
             
             user_role = key_info['role']
             user_priority = key_info['priority']
-            
+
+            # Проверка по приоритету или роли
             if required_role is not None:
-                if isinstance(required_role, list):
-                    if check_mode == 'any':
-                        if user_role not in required_role:
-                            return jsonify({"error": "Недостаточно прав"}), 403
-                    else:
-                        required_priority = min([
-                            _roles_hierarchy_cache[role] 
-                            for role in required_role 
-                            if role in _roles_hierarchy_cache
-                        ])
-                        if not _check_role_access(user_priority, required_priority, check_mode):
-                            return jsonify({"error": "Недостаточно прав"}), 403
-                else:
-                    # Одиночная роль
+                # Если передано число — работаем с приоритетом
+                if isinstance(required_role, (int, float)):
+                    required_priority = required_role
+                # Если строка — получаем приоритет из кэша
+                elif isinstance(required_role, str):
                     required_priority = _roles_hierarchy_cache.get(required_role)
-                    if required_priority is None or not _check_role_access(user_priority, required_priority, check_mode):
-                        return jsonify({"error": "Недостаточно прав"}), 403
-            
+                    if required_priority is None:
+                        return jsonify({"error": "Требуемая роль не найдена"}), 500
+                else:
+                    return jsonify({"error": "Неверный формат required_role"}), 500
+
+                # Проверка доступа
+                if not _check_role_access(user_priority, required_priority, check_mode):
+                    return jsonify({"error": "Недостаточно прав"}), 403
+
+            # Сохраняем данные в g
             g.api_key = api_key
             g.api_key_role = user_role
             g.api_key_priority = user_priority

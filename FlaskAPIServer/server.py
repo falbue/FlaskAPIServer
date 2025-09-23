@@ -1,5 +1,3 @@
-VERSION = "0.0.1.1"
-
 from flask import Flask
 from .extensions import cors
 from .routes import *

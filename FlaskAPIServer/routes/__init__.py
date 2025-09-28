@@ -8,7 +8,7 @@ from ..utils.utils import *
 import uuid
 from ..utils.database import SQL_request
 from ..utils import logger
-from ..middleware import setup_middleware, key_role, refresh_api_keys
+from ..middleware import setup_middleware, key_role, refresh_api_keys, generate_jwt_token
 from ..config import *
 
 api = Blueprint('api', __name__)

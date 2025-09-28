@@ -1,6 +1,7 @@
 from functools import wraps
-import os
 import time
+import jwt
+from datetime import datetime, timedelta
 from flask import request, jsonify, g, current_app
 
 from .utils.database import SQL_request
@@ -16,6 +17,11 @@ CACHE_TTL = 300
 # Добавляем кеш для иерархии ролей
 _roles_hierarchy_cache = None
 
+# Секретный ключ для JWT (лучше хранить в конфиге)
+JWT_SECRET = config.SECRET_KEY
+JWT_LIFETIME = config.JWT_LIFETIME
+JWT_ALGORITHM = 'HS256'
+
 def refresh_api_keys():
     _refresh_api_keys_cache()
     return True
@@ -27,7 +33,7 @@ def _refresh_api_keys_cache():
         # Загружаем ключи и роли
         result = SQL_request(
             "SELECT ak.key, ak.role, r.priority FROM api_keys ak "
-            "JOIN roles r ON ak.role = r.name WHERE ak.is_active = 1",
+            "JOIN key_roles r ON ak.role = r.name WHERE ak.is_active = 1",
             fetch='all'
         )
         
@@ -40,7 +46,7 @@ def _refresh_api_keys_cache():
             
         # Загружаем иерархию ролей
         roles_result = SQL_request(
-            "SELECT name, priority FROM roles ORDER BY priority DESC",
+            "SELECT name, priority FROM key_roles ORDER BY priority DESC",
             fetch='all'
         )
         if roles_result:
@@ -62,7 +68,7 @@ def _get_api_key_info(api_key):
     try:
         result = SQL_request(
             "SELECT ak.role, r.priority FROM api_keys ak "
-            "JOIN roles r ON ak.role = r.name "
+            "JOIN key_roles r ON ak.role = r.name "
             "WHERE ak.key = ? AND ak.is_active = 1",
             (api_key,),
             fetch='one'
@@ -78,6 +84,44 @@ def _get_api_key_info(api_key):
     
     return None
 
+def _get_jwt_role_info(role_name):
+    """Получает информацию о роли из кэша для JWT токенов"""
+    if not _roles_hierarchy_cache:
+        _refresh_api_keys_cache()
+    
+    if role_name in _roles_hierarchy_cache:
+        return {
+            'role': role_name,
+            'priority': _roles_hierarchy_cache[role_name]
+        }
+    return None
+
+def _decode_jwt_token(token):
+    """Декодирует JWT токен и возвращает информацию о пользователе"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        
+        # Проверяем срок действия
+        if 'exp' in payload and payload['exp'] < time.time():
+            return None
+        
+        role_name = payload.get('role')
+        if not role_name:
+            return None
+            
+        role_info = _get_jwt_role_info(role_name)
+        if not role_info:
+            return None
+            
+        return role_info
+        
+    except jwt.ExpiredSignatureError:
+        logger.warning("JWT токен просрочен")
+        return None
+    except jwt.InvalidTokenError:
+        logger.error("Невалидный JWT токен")
+        return None
+
 def _check_role_access(user_priority, required_priority, check_mode):
     """Проверяет доступ в зависимости от режима проверки"""
     if check_mode == 'exact':
@@ -86,6 +130,32 @@ def _check_role_access(user_priority, required_priority, check_mode):
         return user_priority >= required_priority
     return False
 
+def generate_jwt_token(role='min', expires_in=JWT_LIFETIME):
+    """
+    Генерирует JWT токен для указанной роли
+
+    :param role: Название роли (должна существовать в базе данных)
+    :param expires_in: Время жизни токена в секундах (по умолчанию 1 час)
+    """
+
+    if not _roles_hierarchy_cache:
+        _refresh_api_keys_cache()
+
+    if role == "min":
+        # Находим роль с минимальным значением
+        role = min(_roles_hierarchy_cache, key=_roles_hierarchy_cache.get)
+
+    if role not in _roles_hierarchy_cache:
+        raise ValueError(f"Роль '{role}' не существует в системе")
+
+    payload = {
+        'role': role,
+        'exp': datetime.utcnow() + timedelta(hours=expires_in),
+        'iat': datetime.utcnow()
+    }
+
+    token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return token
 
 def key_role(required_role=None, check_mode='min'):
     """
@@ -100,17 +170,37 @@ def key_role(required_role=None, check_mode='min'):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             api_key = request.headers.get('X-API-Key')
+            auth_header = request.headers.get('Authorization')
             
-            if not api_key:
-                return jsonify({"error": "API ключ отсутствует"}), 401
-
-            key_info = _get_api_key_info(api_key)
-            
-            if not key_info:
-                return jsonify({"error": "Неверный API ключ"}), 403
-            
-            user_role = key_info['role']
-            user_priority = key_info['priority']
+            # Проверяем JWT токен (если API ключ не предоставлен)
+            if not api_key and auth_header and auth_header.startswith('Bearer '):
+                token = auth_header.split(' ')[1]
+                key_info = _decode_jwt_token(token)
+                
+                if not key_info:
+                    return jsonify({"error": "Невалидный JWT токен"}), 403
+                
+                user_role = key_info['role']
+                user_priority = key_info['priority']
+                
+                # Помечаем, что использовался JWT
+                g.auth_method = 'jwt'
+                
+            # Проверяем API ключ
+            elif api_key:
+                key_info = _get_api_key_info(api_key)
+                
+                if not key_info:
+                    return jsonify({"error": "Неверный API ключ"}), 403
+                
+                user_role = key_info['role']
+                user_priority = key_info['priority']
+                
+                # Помечаем, что использовался API ключ
+                g.auth_method = 'api_key'
+                
+            else:
+                return jsonify({"error": "API ключ или JWT токен отсутствует"}), 401
 
             # Проверка по приоритету или роли
             if required_role is not None:
@@ -119,6 +209,9 @@ def key_role(required_role=None, check_mode='min'):
                     required_priority = required_role
                 # Если строка — получаем приоритет из кэша
                 elif isinstance(required_role, str):
+                    if not _roles_hierarchy_cache:
+                        _refresh_api_keys_cache()
+                    
                     required_priority = _roles_hierarchy_cache.get(required_role)
                     if required_priority is None:
                         return jsonify({"error": "Требуемая роль не найдена"}), 500
@@ -130,7 +223,8 @@ def key_role(required_role=None, check_mode='min'):
                     return jsonify({"error": "Недостаточно прав"}), 403
 
             # Сохраняем данные в g
-            g.api_key = api_key
+            g.api_key = api_key if api_key else None
+            g.jwt_token = auth_header.split(' ')[1] if auth_header and auth_header.startswith('Bearer ') else None
             g.api_key_role = user_role
             g.api_key_priority = user_priority
             
@@ -140,3 +234,10 @@ def key_role(required_role=None, check_mode='min'):
 
 def setup_middleware(app):
     app.config['ROLES_HIERARCHY'] = _roles_hierarchy_cache
+
+# Функции для внешнего использования
+def get_available_roles():
+    """Возвращает доступные роли"""
+    if not _roles_hierarchy_cache:
+        _refresh_api_keys_cache()
+    return _roles_hierarchy_cache

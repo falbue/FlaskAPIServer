@@ -18,7 +18,7 @@ def get_all_keys():
 
 @api.route('/admin/keys', methods=['POST'])
 @key_role('api_key')
-def create_key():
+def api_create_key():
     try:
         data = request.get_json()
         if not data or 'role' not in data:
@@ -92,6 +92,15 @@ def refresh_keys():
     try:
         refresh_api_keys()
         return jsonify({"message": "Кеш API-ключей обновлен"}), 200
+    except Exception as e:
+        logger.error(f"Ошибка при обновлении кеша: {e}")
+        return jsonify({"error": "Внутренняя ошибка сервера"}), 500
+
+@api.route('/admin/keys/jwt', methods=['GET', "POST"])
+def generate_token():
+    try:
+        token = generate_jwt_token()
+        return jsonify({'token': token})
     except Exception as e:
         logger.error(f"Ошибка при обновлении кеша: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500

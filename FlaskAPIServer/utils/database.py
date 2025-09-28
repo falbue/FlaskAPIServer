@@ -57,9 +57,9 @@ SQL_request("""CREATE TABLE IF NOT EXISTS api_keys (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );""")
 
-SQL_request("""CREATE TABLE IF NOT EXISTS roles (
+SQL_request("""CREATE TABLE IF NOT EXISTS key_roles (
     name VARCHAR(50) PRIMARY KEY,
     priority INTEGER NOT NULL UNIQUE
 );""")
 
-SQL_request("INSERT OR IGNORE INTO roles (name, priority) VALUES ('api_key', 50);")
+SQL_request("INSERT OR IGNORE INTO key_roles (name, priority) VALUES ('api_key', 10);")

@@ -100,7 +100,7 @@ def refresh_keys():
 def generate_token():
     try:
         token = generate_jwt_token()
-        return jsonify({'token': token})
+        return jsonify({'token': token}), 200
     except Exception as e:
         logger.error(f"Ошибка при обновлении кеша: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500

@@ -2,20 +2,20 @@ from . import *
 from .keys import logger
 
 
-@api.route('/admin/roles', methods=['GET'])
+@api.route('/admin/key_roles', methods=['GET'])
 @key_role('api_key')
-def get_all_roles():
+def get_all_key_roles():
     try:
-        roles = SQL_request(
-            "SELECT name, priority FROM roles ORDER BY priority ASC",
+        key_roles = SQL_request(
+            "SELECT name, priority FROM key_roles ORDER BY priority ASC",
             fetch='all'
         )
-        return jsonify({"roles": roles}), 200
+        return jsonify({"key_roles": key_roles}), 200
     except Exception as e:
         logger.error(f"Ошибка при получении списка ролей: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
-@api.route('/admin/roles', methods=['POST'])
+@api.route('/admin/key_roles', methods=['POST'])
 @key_role('api_key')
 def create_role():
     try:
@@ -27,7 +27,7 @@ def create_role():
         priority = data['priority']
 
         SQL_request(
-            "INSERT INTO roles (name, priority) VALUES (?, ?)",
+            "INSERT INTO key_roles (name, priority) VALUES (?, ?)",
             (name, priority),
             fetch=None
         )
@@ -39,7 +39,7 @@ def create_role():
         logger.error(f"Ошибка при создании роли: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
-@api.route('/admin/roles/<name>', methods=['PATCH'])
+@api.route('/admin/key_roles/<name>', methods=['PATCH'])
 @key_role('api_key')
 def update_role(name):
     try:
@@ -47,7 +47,7 @@ def update_role(name):
         if not data.get("priority"):
             return jsonify({"error": "Пустое тело запроса"}), 400
 
-        SQL_request("UPDATE roles SET priority = ? WHERE name = ?", (data.get("priority"), name), fetch=None)
+        SQL_request("UPDATE key_roles SET priority = ? WHERE name = ?", (data.get("priority"), name), fetch=None)
 
         logger.info(f"Обновлена роль: {name}")
         return jsonify({"message": "Роль обновлена"}), 200
@@ -56,12 +56,12 @@ def update_role(name):
         logger.error(f"Ошибка при обновлении роли: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
-@api.route('/admin/roles/<name>', methods=['DELETE'])
+@api.route('/admin/key_roles/<name>', methods=['DELETE'])
 @key_role('api_key')
 def delete_role(name):
     try:
         SQL_request(
-            "DELETE FROM roles WHERE name = ?",
+            "DELETE FROM key_roles WHERE name = ?",
             (name,),
             fetch=None
         )

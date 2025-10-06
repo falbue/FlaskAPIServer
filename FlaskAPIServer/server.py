@@ -27,6 +27,10 @@ def create_app():
 
     return app
 
+@api.route('/fas', methods=['GET'])
+def test_fas():
+    return jsonify({"message":"FlaskAPIServer в норме"}), 200
+
 
 def start_server():
     app = create_app()

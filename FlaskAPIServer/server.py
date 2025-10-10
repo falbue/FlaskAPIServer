@@ -7,6 +7,8 @@ import FlaskAPIServer.config
 from .utils import *
 from .config import *
 
+from werkzeug.security import check_password_hash, generate_password_hash
+
 config = FlaskAPIServer.config
 
 logger = logger.setup(DEBUG=config.DEBUG, name="SERVER", log_path=config.LOG_PATH)

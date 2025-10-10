@@ -161,6 +161,15 @@ def generate_jwt_token(role='min', jwt_data=None, expires_in=JWT_LIFETIME):
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
     return token
 
+def decode_jwt_token(token):  # Декодирует JWT токен и возвращает его содержимое
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise ValueError("Токен просрочен")
+    except jwt.InvalidTokenError:
+        raise ValueError("Некорректный токен")
+
 def key_role(required_role=None, check_mode='min'):
     """
     Декоратор для проверки ролей с поддержкой иерархии или приоритета

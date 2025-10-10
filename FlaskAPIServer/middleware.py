@@ -130,19 +130,20 @@ def _check_role_access(user_priority, required_priority, check_mode):
         return user_priority >= required_priority
     return False
 
-def generate_jwt_token(role='min', expires_in=JWT_LIFETIME):
+def generate_jwt_token(role='min', jwt_data=None, expires_in=JWT_LIFETIME):
     """
     Генерирует JWT токен для указанной роли
 
     :param role: Название роли (должна существовать в базе данных)
-    :param expires_in: Время жизни токена в секундах (по умолчанию 1 час)
+    :param jwt_data: Словарь с дополнительными данными для записи в токен
     """
+    if jwt_data is None:
+        jwt_data = {}
 
     if not _roles_hierarchy_cache:
         _refresh_api_keys_cache()
 
-    if role == "min":
-        # Находим роль с минимальным значением
+    if role == "min": # Находим роль с минимальным значением
         role = min(_roles_hierarchy_cache, key=_roles_hierarchy_cache.get)
 
     if role not in _roles_hierarchy_cache:
@@ -153,6 +154,9 @@ def generate_jwt_token(role='min', expires_in=JWT_LIFETIME):
         'exp': datetime.utcnow() + timedelta(hours=expires_in),
         'iat': datetime.utcnow()
     }
+
+    # Добавляем дополнительные данные в payload
+    payload.update(jwt_data)
 
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
     return token

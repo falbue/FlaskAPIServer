@@ -13,6 +13,9 @@ LOG_PATH=data/
 JWT_LIFETIME=24
 DEBUG=True
 
+PREFIX_KEY_ROLES=/admin/key_roles
+PREFIX_KEYS=/admin/keys
+
 SMTP_SERVER=
 SMTP_PORT=
 SMTP_USER=
@@ -35,8 +38,11 @@ FROM_EMAIL=
 SECRET_KEY = os.getenv("SECRET_KEY")
 DB_PATH = os.getenv("DB_PATH")
 LOG_PATH = os.getenv("LOG_PATH")
-JWT_LIFETIME = int(os.getenv("JWT_LIFETIME", "24"))
 DEBUG = os.getenv("DEBUG", "False").lower() in ["true", "1"]
+JWT_LIFETIME = int(os.getenv("JWT_LIFETIME", "24"))
+
+PREFIX_KEY_ROLES = os.getenv("PREFIX_KEY_ROLES")
+PREFIX_KEYS = os.getenv("PREFIX_KEYS")
 
 db_dir = os.path.dirname(DB_PATH)
 if db_dir:

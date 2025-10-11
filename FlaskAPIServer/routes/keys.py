@@ -3,7 +3,7 @@ from . import *
 
 logger = logger.setup(DEBUG, name="API_KEYS", log_path=LOG_PATH)
 
-@api.route('/admin/keys', methods=['GET'])
+@api.route(f'{PREFIX_KEYS}', methods=['GET'])
 @key_role('api_key')
 def get_all_keys():
     try:
@@ -16,7 +16,7 @@ def get_all_keys():
         logger.error(f"Ошибка при получении списка ключей: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
-@api.route('/admin/keys', methods=['POST'])
+@api.route(f'{PREFIX_KEYS}', methods=['POST'])
 @key_role('api_key')
 def api_create_key():
     try:
@@ -41,7 +41,7 @@ def api_create_key():
         logger.error(f"Ошибка при создании ключа: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
-@api.route('/admin/keys/<key>', methods=['PATCH'])
+@api.route(f'{PREFIX_KEYS}/<key>', methods=['PATCH'])
 @key_role('api_key')
 def update_key(key):
     try:
@@ -67,7 +67,7 @@ def update_key(key):
         logger.error(f"Ошибка при обновлении ключа: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
-@api.route('/admin/keys/<key>', methods=['DELETE'])
+@api.route(f'{PREFIX_KEYS}/<key>', methods=['DELETE'])
 @key_role('api_key')
 def delete_key(key):
     try:
@@ -86,7 +86,7 @@ def delete_key(key):
         logger.error(f"Ошибка при удалении ключа: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
-@api.route('/admin/keys/refresh', methods=['GET'])
+@api.route(f'{PREFIX_KEYS}/refresh', methods=['GET'])
 @key_role('api_key')
 def refresh_keys():
     try:
@@ -96,7 +96,7 @@ def refresh_keys():
         logger.error(f"Ошибка при обновлении кеша: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
-@api.route('/admin/keys/jwt', methods=['GET', "POST"])
+@api.route(f'{PREFIX_KEYS}/jwt', methods=['GET', "POST"])
 def generate_token():
     try:
         token = generate_jwt_token()

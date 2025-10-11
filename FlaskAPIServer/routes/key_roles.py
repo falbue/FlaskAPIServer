@@ -2,7 +2,7 @@ from . import *
 from .keys import logger
 
 
-@api.route('/admin/key_roles', methods=['GET'])
+@api.route(f'{PREFIX_KEY_ROLES}', methods=['GET'])
 @key_role('api_key')
 def get_all_key_roles():
     try:
@@ -15,7 +15,7 @@ def get_all_key_roles():
         logger.error(f"Ошибка при получении списка ролей: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
-@api.route('/admin/key_roles', methods=['POST'])
+@api.route(f'{PREFIX_KEY_ROLES}', methods=['POST'])
 @key_role('api_key')
 def create_role():
     try:
@@ -39,7 +39,7 @@ def create_role():
         logger.error(f"Ошибка при создании роли: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
-@api.route('/admin/key_roles/<name>', methods=['PATCH'])
+@api.route(f'{PREFIX_KEY_ROLES}/<name>', methods=['PATCH'])
 @key_role('api_key')
 def update_role(name):
     try:
@@ -56,7 +56,7 @@ def update_role(name):
         logger.error(f"Ошибка при обновлении роли: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
-@api.route('/admin/key_roles/<name>', methods=['DELETE'])
+@api.route(f'{PREFIX_KEY_ROLES}/<name>', methods=['DELETE'])
 @key_role('api_key')
 def delete_role(name):
     try:

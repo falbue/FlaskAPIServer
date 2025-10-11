@@ -130,7 +130,7 @@ def _check_role_access(user_priority, required_priority, check_mode):
         return user_priority >= required_priority
     return False
 
-def generate_jwt_token(role='min', jwt_data=None, expires_in=JWT_LIFETIME):
+def generate_jwt_token(role='min', jwt_data=None, lifetime=JWT_LIFETIME):
     """
     Генерирует JWT токен для указанной роли
 
@@ -151,7 +151,7 @@ def generate_jwt_token(role='min', jwt_data=None, expires_in=JWT_LIFETIME):
 
     payload = {
         'role': role,
-        'exp': datetime.utcnow() + timedelta(hours=expires_in),
+        'exp': datetime.utcnow() + timedelta(hours=lifetime),
         'iat': datetime.utcnow()
     }
 

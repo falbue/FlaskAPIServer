@@ -21,7 +21,7 @@ def send_email(to_email, subject, text_body, html_body=None):
     try:
         with smtplib.SMTP(config.SMTP_SERVER, config.SMTP_PORT) as server:
             server.starttls()
-            server.login(config.SMTP_USER, congig.SMTP_PASSWORD)
+            server.login(config.SMTP_USER, config.SMTP_PASSWORD)
             server.sendmail(config.FROM_EMAIL, to_email, msg.as_string())
         return True
     except Exception as e:

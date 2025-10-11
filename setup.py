@@ -1,41 +1,30 @@
-from setuptools import setup, find_packages
+import os
 import re
+from setuptools import setup, find_packages
 
-def get_version_from_file(file_path: str, version_var: str = "VERSION"):
-    with open(file_path, "r", encoding="utf-8") as f:
-        content = f.read()
-    pattern = rf"^{version_var}\s*=\s*['\"](.*?)['\"]|{version_var}\s*=\s*([\d.]+)"
-    match = re.search(pattern, content, re.MULTILINE)
-    if match:
-        return match.group(1) or match.group(2)
-    return None
+def get_version():
+    version_file = os.path.join(os.path.dirname(__file__), "version.py")
+    if os.path.exists(version_file):
+        with open(version_file, "r") as f:
+            content = f.read()
+            match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", content, re.M)
+            if match:
+                return match.group(1)
+    return "0.0.1.dev0"
 
-def read_requirements(file_path: str = "requirements.txt"):
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            requirements = []
-            for line in f:
-                line = line.strip()
-                # Пропускаем пустые строки и комментарии
-                if line and not line.startswith("#"):
-                    requirements.append(line)
-            return requirements
-    except FileNotFoundError:
-        print(f"Warning: {file_path} not found. No dependencies will be installed.")
-        return []
-
-version = get_version_from_file("FlaskAPIServer/server.py")
-install_requires = read_requirements()
+def parse_requirements(filename):
+    with open(filename, 'r') as f:
+        return [line.strip() for line in f if line.strip() and not line.startswith('#')]
 
 setup(
     name='FlaskAPIServer',
-    version=version,
+    version=get_version(),
     packages=find_packages(where="."),
     include_package_data=True,
     package_data={
         "developer_application": ["*"],
     },
-    install_requires=install_requires,
+    install_requires=parse_requirements('requirements.txt'),
     description='Готовый сервер flask для быстрого использования API',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',

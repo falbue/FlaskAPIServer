@@ -1,21 +1,23 @@
+from werkzeug.security import check_password_hash, generate_password_hash
 from flask import Flask
 from .extensions import cors
 from .routes import *
 import os
-import FlaskAPIServer.config
+from . import config
 
-from .utils import *
-from .config import *
-
-from werkzeug.security import check_password_hash, generate_password_hash
-
-config = FlaskAPIServer.config
+from .utils import database, logger, utils
 
 logger = logger.setup(DEBUG=config.DEBUG, name="SERVER", log_path=config.LOG_PATH)
 
 for var in config.required_env_vars:
     if not os.getenv(var):
         raise EnvironmentError(f"Переменная окружения {var} не задана в .env")
+
+if all(var is not None for var in mail_env_vars):
+    from .utils import mail
+else:
+    logger.warning("Модуль для работы с почтой не был подключён")
+
 
 def create_app():
     app = Flask(__name__)

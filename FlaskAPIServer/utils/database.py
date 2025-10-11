@@ -1,10 +1,10 @@
 import json
 import sqlite3
 import os
-import FlaskAPIServer.config
+from .. import config
 from pathlib import Path
 
-DB_PATH = FlaskAPIServer.config.DB_PATH
+DB_PATH = config.DB_PATH
 
 db_dir = os.path.dirname(DB_PATH)
 if db_dir:

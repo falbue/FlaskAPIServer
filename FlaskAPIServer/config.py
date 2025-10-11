@@ -44,6 +44,12 @@ JWT_LIFETIME = int(os.getenv("JWT_LIFETIME", "24"))
 PREFIX_KEY_ROLES = os.getenv("PREFIX_KEY_ROLES")
 PREFIX_KEYS = os.getenv("PREFIX_KEYS")
 
+SMTP_SERVER = os.getenv("SMTP_SERVER")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+FROM_EMAIL = os.getenv("FROM_EMAIL", SMTP_USER)
+
 db_dir = os.path.dirname(DB_PATH)
 if db_dir:
     os.makedirs(db_dir, exist_ok=True)
@@ -53,3 +59,4 @@ if logs:
     os.makedirs(logs, exist_ok=True)
 
 required_env_vars = ["SECRET_KEY", "DB_PATH", "LOG_PATH", "JWT_LIFETIME", "DEBUG"]
+mail_env_vars = [SMTP_SERVER, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, FROM_EMAIL]

@@ -7,7 +7,7 @@ env_path = Path('.') / '.env'
 if env_path.exists():
     load_dotenv(dotenv_path=env_path)
 else:
-    env_template = """SECRET_KEY=
+    env_template = """SECRET_KEY=FlaskAPIServer
 DB_PATH=data/database.db
 LOG_PATH=data/
 JWT_LIFETIME=24

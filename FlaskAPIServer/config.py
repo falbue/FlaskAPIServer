@@ -35,20 +35,15 @@ FROM_EMAIL=
     )
 
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-DB_PATH = os.getenv("DB_PATH")
-LOG_PATH = os.getenv("LOG_PATH")
-DEBUG = os.getenv("DEBUG", "False").lower() in ["true", "1"]
-JWT_LIFETIME = int(os.getenv("JWT_LIFETIME", "24"))
+CONVERSIONS = {
+    'DEBUG': lambda x: x.lower() in ['true', '1']
+}
 
-PREFIX_KEY_ROLES = os.getenv("PREFIX_KEY_ROLES")
-PREFIX_KEYS = os.getenv("PREFIX_KEYS")
-
-SMTP_SERVER = os.getenv("SMTP_SERVER")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USER = os.getenv("SMTP_USER")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-FROM_EMAIL = os.getenv("FROM_EMAIL", SMTP_USER)
+for key, value in os.environ.items():
+    if key in CONVERSIONS:
+        globals()[key] = CONVERSIONS[key](os.getenv(key, value))
+    else:
+        globals()[key] = os.getenv(key)
 
 db_dir = os.path.dirname(DB_PATH)
 if db_dir:

@@ -17,5 +17,7 @@ api = Blueprint('api', __name__)
 def example():
     return jsonify({"message": "API Работает"}), 200
 
-from .keys import *
-from .key_roles import *
+if config.PREFIX_KEY_ROLES:
+    from .key_roles import *
+if config.PREFIX_KEYS:
+    from .keys import *

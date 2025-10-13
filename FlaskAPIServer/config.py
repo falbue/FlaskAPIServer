@@ -54,4 +54,3 @@ if logs:
     os.makedirs(logs, exist_ok=True)
 
 required_env_vars = ["SECRET_KEY", "DB_PATH", "LOG_PATH", "JWT_LIFETIME", "DEBUG"]
-mail_env_vars = [SMTP_SERVER, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, FROM_EMAIL]

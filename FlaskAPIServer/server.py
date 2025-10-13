@@ -14,7 +14,7 @@ for var in config.required_env_vars:
     if not os.getenv(var):
         raise EnvironmentError(f"Переменная окружения {var} не задана в .env")
 
-if all(var is not None for var in mail_env_vars):
+if os.getenv("SMTP_USER"):
     from .utils import mail
 else:
     logger.warning("Модуль для работы с почтой не был подключён")

@@ -149,9 +149,10 @@ def generate_jwt_token(role='min', jwt_data=None, lifetime=JWT_LIFETIME):
     if role not in _roles_hierarchy_cache:
         raise ValueError(f"Роль '{role}' не существует в системе")
 
+    print(lifetime)
     payload = {
         'role': role,
-        'exp': datetime.utcnow() + timedelta(hours=lifetime),
+        'exp': datetime.utcnow() + timedelta(hours=int(lifetime)),
         'iat': datetime.utcnow()
     }
 

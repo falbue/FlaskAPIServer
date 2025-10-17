@@ -11,6 +11,16 @@ if db_dir:
     os.makedirs(db_dir, exist_ok=True)
 
 def SQL_request(query, params=(), fetch='one', jsonify_result=False):
+    def _parse_json_if_needed(value):
+        if isinstance(value, str):
+            value = value.strip()
+            if value.startswith(('{', '[')):
+                try:
+                    return json.loads(value)
+                except json.JSONDecodeError:
+                    pass
+        return value
+
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         try:
@@ -20,10 +30,7 @@ def SQL_request(query, params=(), fetch='one', jsonify_result=False):
                 rows = cursor.fetchall()
                 columns = [desc[0] for desc in cursor.description]
                 result = [
-                    {
-                        col: json.loads(row[i]) if isinstance(row[i], str) and row[i].startswith('{') else row[i]
-                        for i, col in enumerate(columns)
-                    }
+                    {col: _parse_json_if_needed(row[i]) for i, col in enumerate(columns)}
                     for row in rows
                 ]
 
@@ -31,10 +38,7 @@ def SQL_request(query, params=(), fetch='one', jsonify_result=False):
                 row = cursor.fetchone()
                 if row:
                     columns = [desc[0] for desc in cursor.description]
-                    result = {
-                        col: json.loads(row[i]) if isinstance(row[i], str) and row[i].startswith('{') else row[i]
-                        for i, col in enumerate(columns)
-                    }
+                    result = {col: _parse_json_if_needed(row[i]) for i, col in enumerate(columns)}
                 else:
                     result = None
             else:

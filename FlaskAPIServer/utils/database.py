@@ -2,43 +2,51 @@ import json
 import sqlite3
 import os
 from .. import config
-from pathlib import Path
 
-DB_PATH = config.DB_PATH
 
-db_dir = os.path.dirname(DB_PATH)
-if db_dir:
-    os.makedirs(db_dir, exist_ok=True)
+def SQL_request(
+    query: str, params: tuple = (), fetch: str | None = "one"
+) -> (
+    dict[str, str | int | float | bool | None]
+    | list[dict[str, str | int | float | bool | None]]
+    | None
+):
+    """Выполняет SQL-запрос к базе данных"""
 
-def SQL_request(query, params=(), fetch='one', jsonify_result=False):
     def _parse_json_if_needed(value):
         if isinstance(value, str):
             value = value.strip()
-            if value.startswith(('{', '[')):
+            if value.startswith(("{", "[")):
                 try:
                     return json.loads(value)
                 except json.JSONDecodeError:
                     pass
         return value
 
-    with sqlite3.connect(DB_PATH) as conn:
+    with sqlite3.connect(config.DB_PATH) as conn:
         cursor = conn.cursor()
         try:
             cursor.execute(query, params)
 
-            if fetch == 'all':
+            if fetch == "all":
                 rows = cursor.fetchall()
                 columns = [desc[0] for desc in cursor.description]
                 result = [
-                    {col: _parse_json_if_needed(row[i]) for i, col in enumerate(columns)}
+                    {
+                        col: _parse_json_if_needed(row[i])
+                        for i, col in enumerate(columns)
+                    }
                     for row in rows
                 ]
 
-            elif fetch == 'one':
+            elif fetch == "one":
                 row = cursor.fetchone()
                 if row:
                     columns = [desc[0] for desc in cursor.description]
-                    result = {col: _parse_json_if_needed(row[i]) for i, col in enumerate(columns)}
+                    result = {
+                        col: _parse_json_if_needed(row[i])
+                        for i, col in enumerate(columns)
+                    }
                 else:
                     result = None
             else:
@@ -49,9 +57,8 @@ def SQL_request(query, params=(), fetch='one', jsonify_result=False):
             print(f"Ошибка SQL: {e}")
             raise
 
-    if jsonify_result and result is not None:
-        return json.dumps(result, ensure_ascii=False, indent=2)
     return result
+
 
 SQL_request("""CREATE TABLE IF NOT EXISTS api_keys (
     key TEXT PRIMARY KEY,

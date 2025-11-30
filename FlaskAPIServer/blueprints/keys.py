@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request
 
 from ..utils.logger import setup as logger_setup
 from .. import config
-from ..middleware import generate_jwt_token, role, refresh_api_keys
+from ..middleware import role, refresh_api_keys
 from ..utils.database import SQL_request as SQL
 
 logger = logger_setup("API_KEYS", config.DEBUG, log_path=config.LOG_PATH)
@@ -65,15 +65,19 @@ def api_create_key():
 def update_key(key):
     try:
         data = request.get_json()
-        if not data or "role" not in data:
-            return jsonify({"error": "Не указана роль ключа"}), 400
 
-        role = data["role"]
+        role = data.get("role", None)
         is_active = data.get("is_active", True)
+        if role:
+            SQL(
+                "UPDATE api_keys SET role = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?",
+                (role, key),
+                fetch=None,
+            )
 
         SQL(
-            "UPDATE api_keys SET role = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?",
-            (role, is_active, key),
+            "UPDATE api_keys SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?",
+            (is_active, key),
             fetch=None,
         )
 
@@ -113,18 +117,6 @@ def refresh_keys():
     try:
         refresh_api_keys()
         return jsonify({"message": "Кеш API-ключей обновлен", "success": True}), 200
-    except Exception as e:
-        logger.error(f"Ошибка при обновлении кеша: {e}")
-        return jsonify(
-            {"message": "Внутренняя ошибка сервера", "success": False, "error": str(e)}
-        ), 500
-
-
-@keys.route("/jwt", methods=["GET", "POST"])
-def generate_token():
-    try:
-        token = generate_jwt_token()
-        return jsonify({"token": token, "success": True}), 200
     except Exception as e:
         logger.error(f"Ошибка при обновлении кеша: {e}")
         return jsonify(

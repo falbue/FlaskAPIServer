@@ -7,16 +7,17 @@ from . import logger
 
 logger = logger.setup(config.DEBUG, "MAIL", config.LOG_PATH)
 
+
 def send_email(to_email, subject, text_body, html_body=None):
     msg = MIMEMultipart()
-    msg['From'] = config.FROM_EMAIL
-    msg['To'] = to_email
-    msg['Subject'] = subject
+    msg["From"] = config.FROM_EMAIL
+    msg["To"] = to_email
+    msg["Subject"] = subject
 
-    msg.attach(MIMEText(text_body, 'plain'))
+    msg.attach(MIMEText(text_body, "plain"))
 
     if html_body:
-        msg.attach(MIMEText(html_body, 'html'))
+        msg.attach(MIMEText(html_body, "html"))
 
     try:
         with smtplib.SMTP(config.SMTP_SERVER, config.SMTP_PORT) as server:

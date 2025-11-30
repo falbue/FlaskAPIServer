@@ -14,7 +14,7 @@ logger = logger_setup("API_ROLES", config.DEBUG, log_path=config.LOG_PATH)
 def get_all_roles():
     try:
         roles = SQL(
-            "SELECT name, priority FROM roles ORDER BY priority ASC", fetch="all"
+            "SELECT name, priority FROM key_roles ORDER BY priority ASC", fetch="all"
         )
         return jsonify({"roles": roles}), 200
     except Exception as e:
@@ -34,7 +34,7 @@ def create_role():
         priority = data["priority"]
 
         SQL(
-            "INSERT INTO roles (name, priority) VALUES (?, ?)",
+            "INSERT INTO key_roles (name, priority) VALUES (?, ?)",
             (name, priority),
             fetch=None,
         )
@@ -58,7 +58,7 @@ def update_role(name):
             return jsonify({"error": "Пустое тело запроса"}), 400
 
         SQL(
-            "UPDATE roles SET priority = ? WHERE name = ?",
+            "UPDATE key_roles SET priority = ? WHERE name = ?",
             (data.get("priority"), name),
             fetch=None,
         )
@@ -75,7 +75,7 @@ def update_role(name):
 @role("api_key")
 def delete_role(name):
     try:
-        SQL("DELETE FROM roles WHERE name = ?", (name,), fetch=None)
+        SQL("DELETE FROM key_roles WHERE name = ?", (name,), fetch=None)
 
         logger.info(f"Удалена роль: {name}")
         return jsonify({"message": "Роль удалена"}), 200

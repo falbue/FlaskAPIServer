@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request
 
 from ..utils.logger import setup as logger_setup
 from .. import config
-from ..middleware import generate_jwt_token, key_role, refresh_api_keys
+from ..middleware import generate_jwt_token, role, refresh_api_keys
 from ..utils.database import SQL_request as SQL
 
 logger = logger_setup("API_KEYS", config.DEBUG, log_path=config.LOG_PATH)
@@ -13,21 +13,23 @@ keys = Blueprint("keys", __name__, url_prefix=PREFIX_KEYS)
 
 
 @keys.route("/", methods=["GET"])
-@key_role("api_key")
+@role("api_key")
 def get_all_keys():
     try:
         keys = SQL(
             "SELECT key, role, is_active, created_at, updated_at FROM api_keys ORDER BY created_at DESC",
             fetch="all",
         )
-        return jsonify({"keys": keys}), 200
+        return jsonify({"data": {"keys": keys}, "success": True}), 200
     except Exception as e:
         logger.error(f"Ошибка при получении списка ключей: {e}")
-        return jsonify({"error": "Внутренняя ошибка сервера"}), 500
+        return jsonify(
+            {"message": "Внутренняя ошибка сервера", "success": False, "error": str(e)}
+        ), 500
 
 
 @keys.route("/", methods=["POST"])
-@key_role("api_key")
+@role("api_key")
 def api_create_key():
     try:
         data = request.get_json()
@@ -44,16 +46,22 @@ def api_create_key():
 
         refresh_api_keys()
 
-        logger.info(f"Создан новый API-ключ с ролью {role}")
-        return jsonify({"key": api_key, "role": role, "message": "Ключ создан"}), 201
+        logger.debug(f"Создан новый API-ключ с ролью {role}")
+        return jsonify(
+            {
+                "data": {"key": api_key, "role": role},
+                "message": "Ключ создан",
+                "success": True,
+            }
+        ), 201
 
     except Exception as e:
         logger.error(f"Ошибка при создании ключа: {e}")
-        return jsonify({"error": "Внутренняя ошибка сервера"}), 500
+        return jsonify({"error": "Внутренняя ошибка сервера", "success": False}), 500
 
 
 @keys.route("/<key>", methods=["PATCH"])
-@key_role("api_key")
+@role("api_key")
 def update_key(key):
     try:
         data = request.get_json()
@@ -71,46 +79,54 @@ def update_key(key):
 
         refresh_api_keys()
 
-        logger.info(f"Обновлен API-ключ {key}: роль={role}, активен={is_active}")
-        return jsonify({"message": "Ключ обновлен"}), 200
+        logger.debug(f"Обновлен API-ключ {key}: роль={role}, активен={is_active}")
+        return jsonify({"message": "Ключ обновлен", "success": True}), 200
 
     except Exception as e:
         logger.error(f"Ошибка при обновлении ключа: {e}")
-        return jsonify({"error": "Внутренняя ошибка сервера"}), 500
+        return jsonify(
+            {"message": "Внутренняя ошибка сервера", "success": False, "error": str(e)}
+        ), 500
 
 
 @keys.route("/<key>", methods=["DELETE"])
-@key_role("api_key")
+@role("api_key")
 def delete_key(key):
     try:
         SQL("DELETE FROM api_keys WHERE key = ?", (key,), fetch=None)
 
         refresh_api_keys()
 
-        logger.info(f"Удален API-ключ {key}")
-        return jsonify({"message": "Ключ удален"}), 200
+        logger.debug(f"Удален API-ключ {key}")
+        return jsonify({"message": "Ключ удален", "success": True}), 200
 
     except Exception as e:
         logger.error(f"Ошибка при удалении ключа: {e}")
-        return jsonify({"error": "Внутренняя ошибка сервера"}), 500
+        return jsonify(
+            {"message": "Внутренняя ошибка сервера", "success": False, "error": str(e)}
+        ), 500
 
 
 @keys.route("/refresh", methods=["GET"])
-@key_role("api_key")
+@role("api_key")
 def refresh_keys():
     try:
         refresh_api_keys()
-        return jsonify({"message": "Кеш API-ключей обновлен"}), 200
+        return jsonify({"message": "Кеш API-ключей обновлен", "success": True}), 200
     except Exception as e:
         logger.error(f"Ошибка при обновлении кеша: {e}")
-        return jsonify({"error": "Внутренняя ошибка сервера"}), 500
+        return jsonify(
+            {"message": "Внутренняя ошибка сервера", "success": False, "error": str(e)}
+        ), 500
 
 
 @keys.route("/jwt", methods=["GET", "POST"])
 def generate_token():
     try:
         token = generate_jwt_token()
-        return jsonify({"token": token}), 200
+        return jsonify({"token": token, "success": True}), 200
     except Exception as e:
         logger.error(f"Ошибка при обновлении кеша: {e}")
-        return jsonify({"error": "Внутренняя ошибка сервера"}), 500
+        return jsonify(
+            {"message": "Внутренняя ошибка сервера", "success": False, "error": str(e)}
+        ), 500

@@ -181,7 +181,7 @@ def decode_jwt_token(token):  # Декодирует JWT токен и возв�
         raise ValueError("Некорректный токен")
 
 
-def key_role(required_role=None, check_mode="min"):
+def role(required_role=None, check_mode="min"):
     """
     Декоратор для проверки ролей с поддержкой иерархии или приоритета
 

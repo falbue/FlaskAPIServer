@@ -7,9 +7,8 @@ from ..middleware import role, refresh_api_keys
 from ..utils.database import SQL_request as SQL
 
 logger = logger_setup("API_KEYS", config.DEBUG, log_path=config.LOG_PATH)
-PREFIX_KEYS = "/keys"
 
-keys = Blueprint("keys", __name__, url_prefix=PREFIX_KEYS)
+keys = Blueprint("keys", __name__, url_prefix="/keys")
 
 
 @keys.route("/", methods=["GET"])

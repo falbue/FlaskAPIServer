@@ -3,29 +3,27 @@ from flask import Blueprint, jsonify, request
 from ..utils.logger import setup as logger_setup
 from .. import config
 from ..utils.database import SQL_request as SQL
-from ..middleware import key_role
+from ..middleware import role
 
-roles = Blueprint("roles", __name__)
-
+roles = Blueprint("roles", __name__, url_prefix="/roles")
 logger = logger_setup("API_ROLES", config.DEBUG, log_path=config.LOG_PATH)
-PREFIX_KEY_ROLES = "/roles"
 
 
-@roles.route(f"{PREFIX_KEY_ROLES}", methods=["GET"])
-@key_role("api_key")
-def get_all_key_roles():
+@roles.route("/", methods=["GET"])
+@role("api_key")
+def get_all_roles():
     try:
-        key_roles = SQL(
-            "SELECT name, priority FROM key_roles ORDER BY priority ASC", fetch="all"
+        roles = SQL(
+            "SELECT name, priority FROM roles ORDER BY priority ASC", fetch="all"
         )
-        return jsonify({"key_roles": key_roles}), 200
+        return jsonify({"roles": roles}), 200
     except Exception as e:
         logger.error(f"Ошибка при получении списка ролей: {e}")
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
 
-@roles.route(f"{PREFIX_KEY_ROLES}", methods=["POST"])
-@key_role("api_key")
+@roles.route("/", methods=["POST"])
+@role("api_key")
 def create_role():
     try:
         data = request.get_json()
@@ -36,7 +34,7 @@ def create_role():
         priority = data["priority"]
 
         SQL(
-            "INSERT INTO key_roles (name, priority) VALUES (?, ?)",
+            "INSERT INTO roles (name, priority) VALUES (?, ?)",
             (name, priority),
             fetch=None,
         )
@@ -51,8 +49,8 @@ def create_role():
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
 
-@roles.route(f"{PREFIX_KEY_ROLES}/<name>", methods=["PATCH"])
-@key_role("api_key")
+@roles.route("/<name>", methods=["PATCH"])
+@role("api_key")
 def update_role(name):
     try:
         data = request.get_json()
@@ -60,7 +58,7 @@ def update_role(name):
             return jsonify({"error": "Пустое тело запроса"}), 400
 
         SQL(
-            "UPDATE key_roles SET priority = ? WHERE name = ?",
+            "UPDATE roles SET priority = ? WHERE name = ?",
             (data.get("priority"), name),
             fetch=None,
         )
@@ -73,11 +71,11 @@ def update_role(name):
         return jsonify({"error": "Внутренняя ошибка сервера"}), 500
 
 
-@roles.route(f"{PREFIX_KEY_ROLES}/<name>", methods=["DELETE"])
-@key_role("api_key")
+@roles.route("/<name>", methods=["DELETE"])
+@role("api_key")
 def delete_role(name):
     try:
-        SQL("DELETE FROM key_roles WHERE name = ?", (name,), fetch=None)
+        SQL("DELETE FROM roles WHERE name = ?", (name,), fetch=None)
 
         logger.info(f"Удалена роль: {name}")
         return jsonify({"message": "Роль удалена"}), 200

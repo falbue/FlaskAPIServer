@@ -10,7 +10,12 @@ def SQL_request(
     | list[dict[str, str | int | float | bool | None]]
     | None
 ):
-    """Выполняет SQL-запрос к базе данных"""
+    """Выполняет SQL-запрос к базе данных
+
+    Возвращает:
+    - при `fetch == "one"`: `dict[str, Any] | None`
+    - при `fetch == "all"`: `list[dict[str, Any]]`
+    - в остальных случаях: `None` (коммит)"""
 
     def _parse_json_if_needed(value):
         if isinstance(value, str):
